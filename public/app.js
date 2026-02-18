@@ -111,6 +111,7 @@ function renderTodos() {
                     onchange="toggleTodo(${todo.id})"
                 />
                 <span class="todo-text">${escapeHtml(todo.text)}</span>
+                <button onclick="editTodo(${todo.id})">Edit</button>
                 <button class="delete-btn" onclick="deleteTodo(${todo.id})">Delete</button>
             </div>
         `).join('');
@@ -144,3 +145,38 @@ todoInput.addEventListener('keypress', (e) => {
 
 // Initialize
 fetchTodos();
+
+// Edit a todo
+async function editTodo(id) {
+    const newText = prompt("Edit your todo:");
+
+    if (!newText || newText.trim() === '') {
+        alert('Todo text cannot be empty');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/${id}/edit`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text: newText }),
+        });
+
+        if (response.ok) {
+            const updatedTodo = await response.json();
+            const index = todos.findIndex(t => t.id === id);
+
+            if (index !== -1) {
+                todos[index] = updatedTodo;
+                renderTodos();
+            }
+        } else {
+            alert('Failed to edit todo');
+        }
+    } catch (error) {
+        console.error('Error editing todo:', error);
+        alert('Error editing todo');
+    }
+}
